@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>응급의료기관 정보</title>
+  <style>
+    /* 기본 스타일은 동일 */
+  </style>
+</head>
+<body>
+
+<h1>응급의료기관 정보</h1>
+<table id="emergency-table">
+  <thead>
+  <tr>
+    <th>기관명</th>
+    <th>주소</th>
+    <th>전화번호</th>
+    <th>운영시간</th>
+    <th>위도</th>
+    <th>경도</th>
+    <th>지도 보기</th>
+  </tr>
+  </thead>
+  <tbody>
+  <!-- API 데이터를 동적으로 삽입 -->
+  </tbody>
+</table>
+
+
+<script>
+  function fetchData() {
+    // 사용자 입력값 받아오기
+    const city = document.getElementById('city').value;
+    const district = document.getElementById('district').value;
+
+    if (!city || !district) {
+      alert("시도와 시군구를 입력하세요.");
+      return;
+    }
+
+    // API 호출 URL 구성
+    const serviceKey = "RxxiBoZCkNUsewp3STTp%2BfsoR%2BkNcbIaYYztjQYuLi3aHYRw1uhZ36bKYce%2FfWqeG8ST4NJA1IbRCdssJPOXKg%3D%3D";  // 여기서 "YOUR_SERVICE_KEY"는 실제 서비스 키로 교체해야 합니다.
+    const apiUrl = `http://apis.data.go.kr/B552657/ErmctInfoInqireService/getEmrrmRltmUsefulSckbdInfoInqire?serviceKey=${serviceKey}&STAGE1=${encodeURIComponent(city)}&STAGE2=${encodeURIComponent(district)}&pageNo=1&numOfRows=10`;
+
+    // API 호출
+    fetch(apiUrl)
+            .then(response => response.text())
+            .then(data => {
+              // XML 파싱
+              const parser = new DOMParser();
+              const xmlDoc = parser.parseFromString(data, "text/xml");
+
+              // API 응답에서 item들 추출
+              const items = xmlDoc.getElementsByTagName("item");
+              const tableBody = document.querySelector("#emergency-table tbody");
+              tableBody.innerHTML = "";  // 기존 내용 삭제
+
+              // 각 item에 대해 테이블 행 추가
+              Array.from(items).forEach(item => {
+                const row = document.createElement("tr");
+
+                const dutyName = item.getElementsByTagName("dutyName")[0]?.textContent || "없음";
+                const dutyAddr = item.getElementsByTagName("dutyAddr")[0]?.textContent || "없음";
+                const dutyTel1 = item.getElementsByTagName("dutyTel1")[0]?.textContent || "없음";
+                const dutyTime1s = item.getElementsByTagName("dutyTime1s")[0]?.textContent || "없음";
+                const dutyTime1c = item.getElementsByTagName("dutyTime1c")[0]?.textContent || "없음";
+                const lat = item.getElementsByTagName("wgs84Lat")[0]?.textContent || "없음";
+                const lon = item.getElementsByTagName("wgs84Lon")[0]?.textContent || "없음";
+
+                row.innerHTML = `
+                            <td>${dutyName}</td>
+                            <td>${dutyAddr}</td>
+                            <td>${dutyTel1}</td>
+                            <td>${dutyTime1s} ~ ${dutyTime1c}</td>
+                            <td>${lat}</td>
+                            <td>${lon}</td>
+                            <td><a href="https://www.google.com/maps?q=${lat},${lon}" class="map-link" target="_blank">지도 보기</a></td>
+                        `;
+
+                tableBody.appendChild(row);
+              });
+            })
+            .catch(error => {
+              console.error("API 호출 오류:", error);
+              alert("API 호출에 실패했습니다.");
+            });
+  }
+</script>
+
+<!--<script>-->
+<!--  // API 호출 예시 (서비스 키와 URL을 실제 값으로 대체)-->
+<!--  // const apiUrl = "http://apis.data.go.kr/B552657/ErmctInfoInqireService/getEmrrmRltmUsefulSckbdInfoInqire?serviceKey=RxxiBoZCkNUsewp3STTp%2BfsoR%2BkNcbIaYYztjQYuLi3aHYRw1uhZ36bKYce%2FfWqeG8ST4NJA1IbRCdssJPOXKg%3D%3D&STAGE1=서울특별시&STAGE2=강남구&pageNo=1&numOfRows=10";-->
+
+<!--  // API 호출 URL 구성-->
+
+
+<!--  fetch(apiUrl)-->
+<!--          .then(response =>  {-->
+<!--            if (response.ok) {-->
+<!--              return response.text();  // API가 정상적으로 응답한 경우 텍스트로 반환-->
+<!--            } else {-->
+<!--              console.error("API 요청 실패:", response.status);-->
+<!--              throw new Error("API 요청 실패");-->
+<!--            }-->
+<!--          })// XML 형식으로 응답 받기-->
+<!--          .then(data => {-->
+<!--            console.log("API 응답 데이터:", data);  // 응답 데이터를 콘솔에 출력하여 확인-->
+<!--            // XML 파싱-->
+<!--            // XML 파싱-->
+<!--            const parser = new DOMParser();-->
+<!--            const xmlDoc = parser.parseFromString(data, "text/xml");-->
+
+<!--            // item들 추출-->
+<!--            const items = xmlDoc.getElementsByTagName("item");-->
+<!--            const tableBody = document.querySelector("#emergency-table tbody");-->
+
+<!--            // 각 item에 대해 테이블 행 추가-->
+<!--            Array.from(items).forEach(item => {-->
+<!--              const row = document.createElement("tr");-->
+
+<!--              const dutyName = item.getElementsByTagName("dutyName")[0].textContent;-->
+<!--              const dutyAddr = item.getElementsByTagName("dutyAddr")[0].textContent;-->
+<!--              const dutyTel1 = item.getElementsByTagName("dutyTel1")[0].textContent;-->
+<!--              const dutyTime1s = item.getElementsByTagName("dutyTime1s")[0].textContent + " ~ " + item.getElementsByTagName("dutyTime1c")[0].textContent;-->
+<!--              const lat = item.getElementsByTagName("wgs84Lat")[0].textContent;-->
+<!--              const lon = item.getElementsByTagName("wgs84Lon")[0].textContent;-->
+
+<!--              row.innerHTML = `-->
+<!--                        <td>${dutyName}</td>-->
+<!--                        <td>${dutyAddr}</td>-->
+<!--                        <td>${dutyTel1}</td>-->
+<!--                        <td>${dutyTime1s}</td>-->
+<!--                        <td>${lat}</td>-->
+<!--                        <td>${lon}</td>-->
+<!--                        <td><a href="https://www.google.com/maps?q=${lat},${lon}" class="map-link" target="_blank">지도 보기</a></td>-->
+<!--                    `;-->
+
+<!--              tableBody.appendChild(row);-->
+<!--            });-->
+<!--          })-->
+<!--          .catch(error => console.error("Error fetching the API:", error));-->
+<!--</script>-->
+
+</body>
+</html>
